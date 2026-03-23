@@ -6,7 +6,7 @@ import KanbanView from "./views/kanban/KanbanView";
 import ListView from "./views/list/ListView";
 
 export default function App() {
-  const setTasks = useTaskStore((s) => s.setTasks);
+  const setTasks = useTaskStore((s: any) => s.setTasks);
 
   const [view, setView] = useState<"kanban" | "list">("kanban");
 
@@ -16,9 +16,10 @@ export default function App() {
   }, []);
 
   return (
-    <div className="w-screen h-screen flex flex-col">
+    <div className="h-screen flex flex-col">
+      
       {/* 🔷 Header */}
-      <div className="p-3 flex gap-3 border-b bg-white shadow-sm">
+      <div className="p-3 flex gap-3 border-b bg-white shrink-0">
         <button
           onClick={() => setView("kanban")}
           className={`px-4 py-2 rounded ${
@@ -42,11 +43,12 @@ export default function App() {
         </button>
       </div>
 
-      {/* 🔷 Content */}
+      {/* 🔷 Main Content */}
       <div className="flex-1 overflow-hidden">
         {view === "kanban" && <KanbanView />}
         {view === "list" && <ListView />}
       </div>
+
     </div>
   );
 }
