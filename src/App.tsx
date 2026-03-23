@@ -1,10 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { generateTasks } from "./data/generateTasks";
 import { useTaskStore } from "./store/useTaskStore";
+
 import KanbanView from "./views/kanban/KanbanView";
+import ListView from "./views/list/ListView";
 
 export default function App() {
   const setTasks = useTaskStore((s) => s.setTasks);
+
+  const [view, setView] = useState<"kanban" | "list">("kanban");
 
   useEffect(() => {
     const tasks = generateTasks(500);
@@ -12,8 +16,37 @@ export default function App() {
   }, []);
 
   return (
-  <div className="w-screen h-screen">
-    <KanbanView />
-  </div>
-);
+    <div className="w-screen h-screen flex flex-col">
+      {/* 🔷 Header */}
+      <div className="p-3 flex gap-3 border-b bg-white shadow-sm">
+        <button
+          onClick={() => setView("kanban")}
+          className={`px-4 py-2 rounded ${
+            view === "kanban"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200"
+          }`}
+        >
+          Kanban
+        </button>
+
+        <button
+          onClick={() => setView("list")}
+          className={`px-4 py-2 rounded ${
+            view === "list"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200"
+          }`}
+        >
+          List
+        </button>
+      </div>
+
+      {/* 🔷 Content */}
+      <div className="flex-1 overflow-hidden">
+        {view === "kanban" && <KanbanView />}
+        {view === "list" && <ListView />}
+      </div>
+    </div>
+  );
 }
