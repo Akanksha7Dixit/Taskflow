@@ -1,10 +1,7 @@
-// export default function App() {
-//   return <div>App Started</div>;
-// }
-
 import { useEffect } from "react";
 import { generateTasks } from "./data/generateTasks";
 import { useTaskStore } from "./store/useTaskStore";
+import KanbanView from "./views/kanban/KanbanView";
 
 export default function App() {
   const setTasks = useTaskStore((s) => s.setTasks);
@@ -14,5 +11,9 @@ export default function App() {
     setTasks(tasks);
   }, []);
 
-  return <div>Tasks Loaded</div>;
+  return (
+  <div className="w-screen h-screen">
+    <KanbanView />
+  </div>
+);
 }
