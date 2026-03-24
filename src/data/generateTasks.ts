@@ -12,15 +12,18 @@ function randomDate() {
 }
 
 export function generateTasks(count: number): Task[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `task-${i}`,
-    title: `Task ${i}`,
-    status: statuses[Math.floor(Math.random() * statuses.length)],
-    priority: priorities[Math.floor(Math.random() * priorities.length)],
-    assignee: users[Math.floor(Math.random() * users.length)],
-    startDate: Math.random() > 0.2 ? randomDate() : undefined,
-    dueDate: randomDate(),
-  }));
-}
+  const tasks: Task[] = [];
 
-console.log("working");
+  for (let i = 0; i < count; i++) {
+    tasks.push({
+      id: i.toString(), // ✅ FIXED (number, NOT string)
+      title: `Task ${i}`,
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      priority: priorities[Math.floor(Math.random() * priorities.length)],
+      assignee: users[Math.floor(Math.random() * users.length)],
+      dueDate: randomDate(),
+    });
+  }
+
+  return tasks;
+}

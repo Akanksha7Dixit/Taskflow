@@ -1,120 +1,275 @@
-import { useTaskStore } from "../../store/useTaskStore";
-import { useState } from "react";
-import type { Status } from "../../types/task";
+// import { useTaskStore } from "../../store/useTaskStore";
+// import { useFilters } from "../../hooks/useFilters";
+// import { useCollaboration } from "../../hooks/useCollaboration";
 
-const columns: { key: Status; title: string }[] = [
-  { key: "todo", title: "To Do" },
-  { key: "inprogress", title: "In Progress" },
-  { key: "inreview", title: "In Review" },
-  { key: "done", title: "Done" },
-];
+// type Status = "todo" | "inprogress" | "inreview" | "done";
+
+// const columns: Status[] = ["todo", "inprogress", "inreview", "done"];
+
+// export default function KanbanView() {
+//   const tasks = useTaskStore((s: any) => s.tasks);
+//   const updateTaskStatus = useTaskStore((s: any) => s.updateTaskStatus);
+
+//   const filters = useFilters();
+//   const activity = useCollaboration(tasks);
+
+//   // ✅ FILTER LOGIC
+//   const filteredTasks = tasks.filter((t: any) => {
+//     if (filters.status.length && !filters.status.includes(t.status)) return false;
+//     if (filters.priority.length && !filters.priority.includes(t.priority)) return false;
+//     if (filters.assignee.length && !filters.assignee.includes(t.assignee)) return false;
+
+//     if (filters.from && new Date(t.dueDate) < new Date(filters.from)) return false;
+//     if (filters.to && new Date(t.dueDate) > new Date(filters.to)) return false;
+
+//     return true;
+//   });
+
+//   // ✅ DRAG
+//   const onDragStart = (e: React.DragEvent, id: number) => {
+//     e.dataTransfer.setData("taskId", String(id));
+//   };
+
+//   // ✅ DROP
+//   const onDrop = (e: React.DragEvent, status: Status) => {
+//     const id = Number(e.dataTransfer.getData("taskId"));
+//     updateTaskStatus(id, status);
+//   };
+
+//   const onDragOver = (e: React.DragEvent) => e.preventDefault();
+
+//   // 🎨 PRIORITY COLOR
+//   const getPriorityColor = (priority: string) => {
+//     switch (priority) {
+//       case "low":
+//         return "border-green-400";
+//       case "medium":
+//         return "border-yellow-400";
+//       case "high":
+//         return "border-orange-500";
+//       case "critical":
+//         return "border-red-500";
+//       default:
+//         return "border-gray-300";
+//     }
+//   };
+
+//   return (
+//     <div className="flex gap-4 overflow-x-auto p-4">
+//       {columns.map((col) => {
+//         const colTasks = filteredTasks.filter((t: any) => t.status === col);
+
+//         return (
+//           <div
+//             key={col}
+//             className="min-w-[280px] bg-gray-100 rounded-xl p-3 flex flex-col"
+//             onDrop={(e) => onDrop(e, col)}
+//             onDragOver={onDragOver}
+//           >
+//             {/* HEADER */}
+//             <div className="flex justify-between items-center mb-3">
+//               <h2 className="font-semibold capitalize">{col}</h2>
+//               <span className="text-sm text-gray-500">
+//                 {colTasks.length}
+//               </span>
+//             </div>
+
+//             {/* TASKS */}
+//             <div className="flex flex-col gap-3">
+//               {colTasks.map((task: any) => {
+//                 const viewers = activity[task.id] || [];
+
+//                 return (
+//                   <div
+//                     key={task.id}
+//                     draggable
+//                     onDragStart={(e) => onDragStart(e, task.id)}
+//                     className={`bg-white rounded-xl p-3 shadow-sm border-l-4 cursor-grab active:cursor-grabbing 
+//                     hover:shadow-md transition ${getPriorityColor(task.priority)}`}
+//                   >
+//                     {/* TITLE */}
+//                     <div className="font-medium">{task.title}</div>
+
+//                     {/* ASSIGNEE */}
+//                     <div className="text-sm text-gray-500">
+//                       {task.assignee}
+//                     </div>
+
+//                     {/* DATE */}
+//                     <div className="text-xs text-gray-400 mt-1">
+//                       {new Date(task.dueDate).toDateString()}
+//                     </div>
+
+//                     {/* 👇 PREMIUM AVATARS */}
+//                     <div className="flex items-center mt-3">
+//                       {viewers.length === 0 ? (
+//                         <span className="text-xs text-gray-400">—</span>
+//                       ) : (
+//                         <div className="flex -space-x-2">
+//                           {viewers.slice(0, 3).map((u: string, i: number) => (
+//                             <div
+//                               key={i}
+//                               className="w-7 h-7 flex items-center justify-center rounded-full 
+//                               bg-purple-500 text-white text-xs border-2 border-white"
+//                             >
+//                               {u[0]}
+//                             </div>
+//                           ))}
+
+//                           {/* +MORE */}
+//                           {viewers.length > 3 && (
+//                             <div className="w-7 h-7 flex items-center justify-center rounded-full 
+//                             bg-gray-400 text-white text-xs border-2 border-white">
+//                               +{viewers.length - 3}
+//                             </div>
+//                           )}
+//                         </div>
+//                       )}
+//                     </div>
+//                   </div>
+//                 );
+//               })}
+//             </div>
+//           </div>
+//         );
+//       })}
+//     </div>
+//   );
+// }
+
+import { useTaskStore } from "../../store/useTaskStore";
+import { useFilters } from "../../hooks/useFilters";
+import { useCollaboration } from "../../hooks/useCollaboration";
+
+type Status = "todo" | "inprogress" | "inreview" | "done";
+
+const columns: Status[] = ["todo", "inprogress", "inreview", "done"];
 
 export default function KanbanView() {
-  const tasks = useTaskStore((s) => s.tasks);
-  const setTasks = useTaskStore((s) => s.setTasks);
+  const tasks = useTaskStore((s: any) => s.tasks);
+  const updateTaskStatus = useTaskStore((s: any) => s.updateTaskStatus);
 
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [activeColumn, setActiveColumn] = useState<Status | null>(null);
+  const filters = useFilters();
+  const activity = useCollaboration(tasks);
 
-  const handleDrop = (status: Status) => {
-    if (!draggedTaskId) return;
+  // ✅ FILTER
+  const filteredTasks = tasks.filter((t: any) => {
+    if (filters.status.length && !filters.status.includes(t.status)) return false;
+    if (filters.priority.length && !filters.priority.includes(t.priority)) return false;
+    if (filters.assignee.length && !filters.assignee.includes(t.assignee)) return false;
 
-    const updatedTasks = tasks.map((task) =>
-      task.id === draggedTaskId ? { ...task, status } : task
-    );
+    if (filters.from && new Date(t.dueDate) < new Date(filters.from)) return false;
+    if (filters.to && new Date(t.dueDate) > new Date(filters.to)) return false;
 
-    setTasks(updatedTasks);
-    setDraggedTaskId(null);
-    setActiveColumn(null);
+    return true;
+  });
+
+  // ✅ DRAG START (FIXED → string id)
+  const onDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData("taskId", id);
+  };
+
+  // ✅ DROP (FIXED → NO Number conversion)
+  const onDrop = (e: React.DragEvent, status: Status) => {
+    e.preventDefault();
+
+    const id = e.dataTransfer.getData("taskId"); // ✅ string
+    if (!id) return;
+
+    updateTaskStatus(id, status); // ✅ WORKS NOW
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // ✅ REQUIRED
+  };
+
+  // 🎨 PRIORITY COLOR
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "low":
+        return "border-green-400";
+      case "medium":
+        return "border-yellow-400";
+      case "high":
+        return "border-orange-500";
+      case "critical":
+        return "border-red-500";
+      default:
+        return "border-gray-300";
+    }
   };
 
   return (
-    <div className="flex flex-row gap-4 p-4 w-screen h-screen overflow-x-auto">
+    <div className="flex gap-4 overflow-x-auto p-4">
       {columns.map((col) => {
-        const columnTasks = tasks.filter((t) => t.status === col.key);
+        const colTasks = filteredTasks.filter((t: any) => t.status === col);
 
         return (
           <div
-            key={col.key}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setActiveColumn(col.key);
-            }}
-            onDragLeave={() => setActiveColumn(null)}
-            onDrop={() => handleDrop(col.key)}
-            className={`w-[300px] flex-shrink-0 p-3 rounded-lg shadow transition ${
-              activeColumn === col.key
-                ? "bg-blue-100"
-                : "bg-gray-100"
-            }`}
+            key={col}
+            className="min-w-[280px] bg-gray-100 rounded-xl p-3 flex flex-col"
+            onDrop={(e) => onDrop(e, col)}
+            onDragOver={onDragOver}
           >
-            <h2 className="font-bold mb-3 text-center">
-              {col.title} ({columnTasks.length})
-            </h2>
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="font-semibold capitalize">{col}</h2>
+              <span className="text-sm text-gray-500">
+                {colTasks.length}
+              </span>
+            </div>
 
-            <div className="flex flex-col gap-2 max-h-[75vh] overflow-y-auto">
-              {columnTasks.map((task) => {
-                const dueDate = new Date(task.dueDate);
-                const today = new Date();
-                const isOverdue = dueDate < today;
-
-                const isDragging = draggedTaskId === task.id;
+            {/* TASKS */}
+            <div className="flex flex-col gap-3">
+              {colTasks.map((task: any) => {
+                const viewers = activity[task.id] || [];
 
                 return (
                   <div
                     key={task.id}
                     draggable
-                    onDragStart={(e) => {
-                      setDraggedTaskId(task.id);
-
-                      // 👇 Custom drag image (hidden)
-                      const img = new Image();
-                      img.src =
-                        "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiPjwvc3ZnPg==";
-                      e.dataTransfer.setDragImage(img, 0, 0);
-                    }}
-                    onDragEnd={() => {
-                      setDraggedTaskId(null);
-                      setActiveColumn(null);
-                    }}
-                    className={`p-3 rounded shadow transition cursor-grab ${
-                      isDragging
-                        ? "bg-white opacity-50 scale-95 shadow-lg"
-                        : "bg-white hover:shadow-md"
-                    }`}
+                    onDragStart={(e) => onDragStart(e, task.id)} // ✅ string
+                    className={`bg-white rounded-xl p-3 shadow-sm border-l-4 
+                    cursor-grab active:cursor-grabbing select-none
+                    hover:shadow-md transition ${getPriorityColor(task.priority)}`}
                   >
-                    <p className="font-medium">{task.title}</p>
+                    {/* TITLE */}
+                    <div className="font-medium">{task.title}</div>
 
-                    <p
-                      className={`text-xs mt-1 ${
-                        isOverdue
-                          ? "text-red-500 font-semibold"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {isOverdue
-                        ? "Overdue"
-                        : dueDate.toDateString()}
-                    </p>
+                    {/* ASSIGNEE */}
+                    <div className="text-sm text-gray-500">
+                      {task.assignee}
+                    </div>
 
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
-                        {task.assignee.charAt(0)}
-                      </div>
+                    {/* DATE */}
+                    <div className="text-xs text-gray-400 mt-1">
+                      {new Date(task.dueDate).toDateString()}
+                    </div>
 
-                      <span
-                        className={`text-xs px-2 py-1 rounded font-semibold capitalize ${
-                          task.priority === "critical"
-                            ? "bg-red-100 text-red-600"
-                            : task.priority === "high"
-                            ? "bg-orange-100 text-orange-600"
-                            : task.priority === "medium"
-                            ? "bg-yellow-100 text-yellow-600"
-                            : "bg-green-100 text-green-600"
-                        }`}
-                      >
-                        {task.priority}
-                      </span>
+                    {/* AVATARS */}
+                    <div className="flex items-center mt-3">
+                      {viewers.length === 0 ? (
+                        <span className="text-xs text-gray-400">—</span>
+                      ) : (
+                        <div className="flex -space-x-2">
+                          {viewers.slice(0, 3).map((u: string, i: number) => (
+                            <div
+                              key={i}
+                              className="w-7 h-7 flex items-center justify-center rounded-full 
+                              bg-purple-500 text-white text-xs border-2 border-white"
+                            >
+                              {u[0]}
+                            </div>
+                          ))}
+
+                          {viewers.length > 3 && (
+                            <div className="w-7 h-7 flex items-center justify-center rounded-full 
+                            bg-gray-400 text-white text-xs border-2 border-white">
+                              +{viewers.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

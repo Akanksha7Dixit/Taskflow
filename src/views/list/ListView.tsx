@@ -1,252 +1,159 @@
+import { useRef, useState, useEffect } from "react";
 import { useTaskStore } from "../../store/useTaskStore";
-import { useState } from "react";
-import type { Status } from "../../types/task";
+import { useFilters } from "../../hooks/useFilters";
+import { useCollaboration } from "../../hooks/useCollaboration";
 
-const ROW_HEIGHT = 70;
+const ROW_HEIGHT = 70; // px
 const BUFFER = 5;
-
-type SortField = "title" | "priority" | "dueDate";
-type SortOrder = "asc" | "desc";
-
-const priorityOrder = {
-  critical: 4,
-  high: 3,
-  medium: 2,
-  low: 1,
-};
-
-const statusOptions: Status[] = ["todo", "inprogress", "inreview", "done"];
-const priorityOptions = ["low", "medium", "high", "critical"];
-const assigneeOptions = ["Alice", "Bob", "Charlie", "David", "Emma", "Frank"];
 
 export default function ListView() {
   const tasks = useTaskStore((s: any) => s.tasks);
-  const setTasks = useTaskStore((s: any) => s.setTasks);
+  const updateTaskStatus = useTaskStore((s: any) => s.updateTaskStatus);
+
+  const { priority, assignee, from, to } = useFilters();
+  const activity = useCollaboration(tasks);
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [scrollTop, setScrollTop] = useState(0);
+  const [height, setHeight] = useState(600);
 
-  // 🔥 SORT
-  const [sortField, setSortField] = useState<SortField>("title");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
-
-  // 🔥 FILTERS (MULTI-SELECT)
-  const [statusFilter, setStatusFilter] = useState<Status[]>([]);
-  const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
-  const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
-
-  const toggleFilter = (value: string, filter: string[], setFilter: any) => {
-    if (filter.includes(value)) {
-      setFilter(filter.filter((v) => v !== value));
-    } else {
-      setFilter([...filter, value]);
-    }
-  };
-
-  // 🔥 APPLY FILTERS
-  const filteredTasks = tasks.filter((task: any) => {
-    const statusMatch =
-      statusFilter.length === 0 || statusFilter.includes(task.status);
-
-    const priorityMatch =
-      priorityFilter.length === 0 ||
-      priorityFilter.includes(task.priority);
-
-    const assigneeMatch =
-      assigneeFilter.length === 0 ||
-      assigneeFilter.includes(task.assignee);
-
-    return statusMatch && priorityMatch && assigneeMatch;
+  // ✅ FILTER
+  const filteredTasks = tasks.filter((t: any) => {
+    if (priority.length && !priority.includes(t.priority)) return false;
+    if (assignee.length && !assignee.includes(t.assignee)) return false;
+    if (from && new Date(t.dueDate) < new Date(from)) return false;
+    if (to && new Date(t.dueDate) > new Date(to)) return false;
+    return true;
   });
 
-  // 🔥 SORT
-  type Priority = "low" | "medium" | "high" | "critical";
+  // ✅ SCROLL HANDLER
+  const onScroll = () => {
+    if (!containerRef.current) return;
+    setScrollTop(containerRef.current.scrollTop);
+  };
 
-const sortedTasks = [...filteredTasks].sort((a: any, b: any) => {
-  let result = 0;
+  // ✅ SET HEIGHT
+  useEffect(() => {
+    if (containerRef.current) {
+      setHeight(containerRef.current.clientHeight);
+    }
+  }, []);
 
-  if (sortField === "title") {
-    result = a.title.localeCompare(b.title);
-  }
+  // ✅ CALCULATIONS
+  const total = filteredTasks.length;
+  const visibleCount = Math.ceil(height / ROW_HEIGHT);
 
-  if (sortField === "priority") {
-    const pa = a.priority as Priority;
-    const pb = b.priority as Priority;
-
-    result = priorityOrder[pb] - priorityOrder[pa];
-  }
-
-  if (sortField === "dueDate") {
-    result =
-      new Date(a.dueDate).getTime() -
-      new Date(b.dueDate).getTime();
-  }
-
-  return sortOrder === "asc" ? result : -result;
-});
-
-  // 🔥 VIRTUAL SCROLL
-  const visibleStartIndex = Math.floor(scrollTop / ROW_HEIGHT);
-  const visibleCount = Math.ceil(600 / ROW_HEIGHT);
-
-  const startIndex = Math.max(0, visibleStartIndex - BUFFER);
-  const endIndex = Math.min(
-    sortedTasks.length,
-    visibleStartIndex + visibleCount + BUFFER
+  const startIndex = Math.max(
+    0,
+    Math.floor(scrollTop / ROW_HEIGHT) - BUFFER
   );
 
-  const visibleTasks = sortedTasks.slice(startIndex, endIndex);
+  const endIndex = Math.min(
+    total,
+    startIndex + visibleCount + BUFFER * 2
+  );
+
+  const visibleTasks = filteredTasks.slice(startIndex, endIndex);
 
   const offsetY = startIndex * ROW_HEIGHT;
-  const totalHeight = sortedTasks.length * ROW_HEIGHT;
-
-  // 🔥 STATUS UPDATE
-  const updateStatus = (taskId: string, newStatus: Status) => {
-    const updatedTasks = tasks.map((task: any) =>
-      task.id === taskId ? { ...task, status: newStatus } : task
-    );
-    setTasks(updatedTasks);
-  };
-
-  // 🔁 SORT HANDLER
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("asc");
-    }
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return "";
-    return sortOrder === "asc" ? "↑" : "↓";
-  };
+  const totalHeight = total * ROW_HEIGHT;
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
-
-      {/* 🔷 FILTER BAR */}
-      <div className="p-4 bg-white border-b flex flex-wrap gap-4">
-
-        {/* STATUS */}
-        <div>
-          <p className="text-xs font-semibold mb-1">Status</p>
-          <div className="flex gap-2 flex-wrap">
-            {statusOptions.map((s) => (
-              <button
-                key={s}
-                onClick={() =>
-                  toggleFilter(s, statusFilter, setStatusFilter)
-                }
-                className={`px-2 py-1 rounded text-xs ${
-                  statusFilter.includes(s)
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* PRIORITY */}
-        <div>
-          <p className="text-xs font-semibold mb-1">Priority</p>
-          <div className="flex gap-2 flex-wrap">
-            {priorityOptions.map((p) => (
-              <button
-                key={p}
-                onClick={() =>
-                  toggleFilter(p, priorityFilter, setPriorityFilter)
-                }
-                className={`px-2 py-1 rounded text-xs ${
-                  priorityFilter.includes(p)
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-200"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ASSIGNEE */}
-        <div>
-          <p className="text-xs font-semibold mb-1">Assignee</p>
-          <div className="flex gap-2 flex-wrap">
-            {assigneeOptions.map((a) => (
-              <button
-                key={a}
-                onClick={() =>
-                  toggleFilter(a, assigneeFilter, setAssigneeFilter)
-                }
-                className={`px-2 py-1 rounded text-xs ${
-                  assigneeFilter.includes(a)
-                    ? "bg-purple-500 text-white"
-                    : "bg-gray-200"
-                }`}
-              >
-                {a}
-              </button>
-            ))}
-          </div>
-        </div>
-
-      </div>
-
-      {/* 🔷 HEADER */}
-      <div className="px-4 py-2 bg-gray-200 font-semibold grid grid-cols-5 cursor-pointer">
-        <div onClick={() => handleSort("title")}>
-          Title {getSortIcon("title")}
-        </div>
-        <div onClick={() => handleSort("priority")}>
-          Priority {getSortIcon("priority")}
-        </div>
-        <div onClick={() => handleSort("dueDate")}>
-          Due Date {getSortIcon("dueDate")}
-        </div>
+    <div className="p-4">
+      {/* HEADER */}
+      <div className="grid grid-cols-6 font-semibold border-b pb-2 mb-2">
+        <div>Title</div>
+        <div>Priority</div>
+        <div>Due Date</div>
         <div>Assignee</div>
         <div>Status</div>
+        <div>Activity</div>
       </div>
 
-      {/* 🔷 SCROLL */}
+      {/* SCROLL CONTAINER */}
       <div
-        className="flex-1 overflow-auto px-4"
-        onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
+        ref={containerRef}
+        onScroll={onScroll}
+        className="h-[600px] overflow-auto border rounded"
       >
         <div style={{ height: totalHeight, position: "relative" }}>
-          <div style={{ transform: `translateY(${offsetY}px)` }}>
+          <div
+            style={{
+              transform: `translateY(${offsetY}px)`,
+            }}
+          >
+            {visibleTasks.map((task: any) => {
+              const due = new Date(task.dueDate);
+              const today = new Date();
 
-            {visibleTasks.map((task: any) => (
-              <div
-                key={task.id}
-                className="grid grid-cols-5 items-center bg-white mb-3 p-4 rounded-xl shadow-sm"
-              >
-                <div>{task.title}</div>
-                <div className="capitalize">{task.priority}</div>
-                <div>{new Date(task.dueDate).toDateString()}</div>
-                <div>{task.assignee}</div>
-                <div>
-                  <select
-                    value={task.status}
-                    onChange={(e) =>
-                      updateStatus(task.id, e.target.value as Status)
-                    }
-                  >
-                    {statusOptions.map((s) => (
-                      <option key={s}>{s}</option>
-                    ))}
-                  </select>
+              let dueText = due.toDateString();
+              let dueClass = "";
+
+              const diff =
+                (today.getTime() - due.getTime()) /
+                (1000 * 60 * 60 * 24);
+
+              if (diff > 0) {
+                dueText = `Overdue ${Math.floor(diff)}d`;
+                dueClass = "text-red-500";
+              } else if (
+                due.toDateString() === today.toDateString()
+              ) {
+                dueText = "Due Today";
+                dueClass = "text-orange-500";
+              }
+
+              return (
+                <div
+                  key={task.id}
+                  className="grid grid-cols-6 items-center border-b px-2"
+                  style={{ height: ROW_HEIGHT }}
+                >
+                  <div>{task.title}</div>
+                  <div>{task.priority}</div>
+                  <div className={dueClass}>{dueText}</div>
+                  <div>{task.assignee}</div>
+
+                  {/* STATUS CHANGE */}
+                  <div>
+                    <select
+                      value={task.status}
+                      onChange={(e) =>
+                        updateTaskStatus(task.id, e.target.value)
+                      }
+                      className="border px-2 py-1 rounded"
+                    >
+                      <option value="todo">todo</option>
+                      <option value="inprogress">inprogress</option>
+                      <option value="inreview">inreview</option>
+                      <option value="done">done</option>
+                    </select>
+                  </div>
+
+                  {/* ACTIVITY */}
+                  <div>
+                    {activity[task.id] ? (
+                      <div className="w-8 h-8 bg-purple-500 text-white flex items-center justify-center rounded-full text-xs">
+                        {activity[task.id]}
+                      </div>
+                    ) : (
+                      <span className="text-gray-300">—</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-
+              );
+            })}
           </div>
         </div>
       </div>
 
+      {/* EMPTY STATE */}
+      {filteredTasks.length === 0 && (
+        <div className="text-center mt-6 text-gray-500">
+          No tasks found
+        </div>
+      )}
     </div>
   );
 }
