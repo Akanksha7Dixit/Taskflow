@@ -7,7 +7,7 @@ A modern task management application built with **React + TypeScript**, featurin
 
 ### Performance Overview
 
-![Lighthouse Performance](./screenshots/lighthouse_performance.png)
+![Lighthouse Performance](./lighthouse_performance.png)
 
 ## 🌟 Features
 
