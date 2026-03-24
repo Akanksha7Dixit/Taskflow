@@ -3,6 +3,11 @@
 A modern task management application built with **React + TypeScript**, featuring Kanban board, List view, and Timeline (Gantt-style) visualization with real-time updates.
 
 ---
+## 📊 Lighthouse Report
+
+### Performance Overview
+
+![Lighthouse Performance](./screenshots/lighthouse_performance.png)
 
 ## 🌟 Features
 
@@ -36,7 +41,6 @@ A modern task management application built with **React + TypeScript**, featurin
 ### 🔍 4. Advanced Filtering
 
 * Filter by:
-
   * Status
   * Priority
   * Assignee
@@ -52,7 +56,6 @@ A modern task management application built with **React + TypeScript**, featurin
 
 * Real-time sync across all views
 * Powered by global state (Zustand)
-
 ---
 
 ## 🛠 Tech Stack
@@ -71,9 +74,7 @@ A modern task management application built with **React + TypeScript**, featurin
 * ❌ No UI component libraries
 * ❌ No virtual scrolling libraries
 * ✅ Fully built with custom logic
-
 ---
-
 ## ⚙️ Installation & Setup
 
 ```bash
