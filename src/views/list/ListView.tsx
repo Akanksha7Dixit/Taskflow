@@ -59,25 +59,30 @@ export default function ListView() {
   });
 
   // 🔥 SORT
-  const sortedTasks = [...filteredTasks].sort((a: any, b: any) => {
-    let result = 0;
+  type Priority = "low" | "medium" | "high" | "critical";
 
-    if (sortField === "title") {
-      result = a.title.localeCompare(b.title);
-    }
+const sortedTasks = [...filteredTasks].sort((a: any, b: any) => {
+  let result = 0;
 
-    if (sortField === "priority") {
-      result = priorityOrder[b.priority] - priorityOrder[a.priority];
-    }
+  if (sortField === "title") {
+    result = a.title.localeCompare(b.title);
+  }
 
-    if (sortField === "dueDate") {
-      result =
-        new Date(a.dueDate).getTime() -
-        new Date(b.dueDate).getTime();
-    }
+  if (sortField === "priority") {
+    const pa = a.priority as Priority;
+    const pb = b.priority as Priority;
 
-    return sortOrder === "asc" ? result : -result;
-  });
+    result = priorityOrder[pb] - priorityOrder[pa];
+  }
+
+  if (sortField === "dueDate") {
+    result =
+      new Date(a.dueDate).getTime() -
+      new Date(b.dueDate).getTime();
+  }
+
+  return sortOrder === "asc" ? result : -result;
+});
 
   // 🔥 VIRTUAL SCROLL
   const visibleStartIndex = Math.floor(scrollTop / ROW_HEIGHT);
