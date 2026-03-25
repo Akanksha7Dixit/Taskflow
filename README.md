@@ -73,6 +73,7 @@ A modern task management application built with **React + TypeScript**, featurin
 * ❌ No drag-and-drop libraries
 * ❌ No UI component libraries
 * ❌ No virtual scrolling libraries
+
 * ✅ Fully built with custom logic
 ---
 ## ⚙️ Installation & Setup
@@ -90,13 +91,10 @@ npm install
 # Run development server
 npm run dev
 ```
-
 App will run on:
-
 ```
 http://localhost:5173
 ```
-
 ---
 
 ## 🌐 Live Demo
